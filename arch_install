@@ -1,0 +1,68 @@
+#!/usr/bin/env bash -e
+
+USER="user"
+
+lsblk
+echo "Enter disk (ex: /dev/sda):"
+read DISK
+
+echo "Partitioning the disk..."
+sgdisk -Z $DISK
+sgdisk -n 1:0:+1GiB -t 1:ef00 $DISK
+sgdisk -n 2:0:0 -t 2:BF01 $DISK
+sgdisk -p $DISK
+
+echo "Formatting partitions..."
+mkfs.fat -F32 ${DISK}1
+mkfs.btrfs ${DISK}2
+
+echo "Mounting filesystems..."
+mount ${DISK}2 /mnt
+mkdir -p /mnt/boot
+mount ${DISK}1 /mnt/boot
+
+echo "Installing the base system..."
+sed -i "/^#ParallelDownloads = /c\ParallelDownloads = 10" /etc/pacman.conf
+pacman-key --init
+pacman-key --populate
+pacstrap /mnt linux linux-firmware base base-devel sudo networkmanager git rustup lightdm lightdm-gtk-greeter i3-wm kitty
+
+echo "Generating fstab..."
+genfstab -U /mnt >> /mnt/etc/fstab
+
+echo "Setting up bootloader..."
+bootctl install --esp-path /mnt/boot
+
+# bootloader selection
+#cat <<EOF > /mnt/boot/loader/loader.conf
+#default arch
+#timeout 3
+#editor 0
+#EOF
+
+cat <<EOF > /mnt/boot/loader/entries/arch.conf
+title   Arch Linux
+linux   /vmlinuz-linux
+initrd  /initramfs-linux.img
+options root=${DISK}2 rw
+EOF
+
+echo "Entering chroot..."
+arch-chroot /mnt /bin/bash <<EOF
+# add user
+useradd -m -G wheel $USER
+echo "$USER:123" | chpasswd
+
+# add user root privileges
+# NOTE: NOPASSWD is temporary. Will remove after post-install setup
+echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# start services
+systemctl enable lightdm NetworkManager
+EOF
+
+echo "Unmounting filesystems..."
+umount -R /mnt
+
+echo "Rebooting..."
+reboot

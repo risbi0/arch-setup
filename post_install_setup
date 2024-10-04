@@ -65,6 +65,7 @@ cat <<EOF > "$BTOP_DESKTOP_FILE"
 [Desktop Entry]
 Name=btop
 Exec=kitty -e btop
+Icon=$USER/.config/rofi/icons/btop.png
 Type=Application
 EOF
 RANGER_DESKTOP_FILE="$HOME/.local/share/applications/ranger.desktop"
@@ -72,6 +73,7 @@ cat <<EOF > "$RANGER_DESKTOP_FILE"
 [Desktop Entry]
 Name=Ranger
 Exec=kitty -e ranger
+Icon=$USER/.config/rofi/icons/ranger.png
 Type=Application
 EOF
 
@@ -85,13 +87,9 @@ git clone https://github.com/risbi0/ohmyzsh.git
 mv ohmyzsh/{.,}* .oh-my-zsh/
 rmdir ohmyzsh
 # set zsh as default shell
-chsh --shell /usr/bin/zsh
+sudo chsh -s $(which zsh)
 
 # remove NOPASSWD
 sudo sed -i 's/%wheel ALL=(ALL) NOPASSWD: ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
-
-# system doesn't seem to recognice the settings.ini,
-# so have to manually set the themes
-lxappearance
 
 reboot

@@ -25,7 +25,7 @@ echo "Installing the base system..."
 sed -i "/^#ParallelDownloads = /c\ParallelDownloads = 10" /etc/pacman.conf
 pacman-key --init
 pacman-key --populate
-pacstrap /mnt linux linux-firmware base base-devel sudo networkmanager git rustup lightdm lightdm-gtk-greeter i3-wm kitty
+pacstrap /mnt linux linux-firmware base base-devel sudo kitty
 
 echo "Generating fstab..."
 genfstab -U /mnt >> /mnt/etc/fstab
@@ -45,20 +45,6 @@ title   Arch Linux
 linux   /vmlinuz-linux
 initrd  /initramfs-linux.img
 options root=${DISK}2 rw
-EOF
-
-echo "Entering chroot..."
-arch-chroot /mnt /bin/bash <<EOF
-# add user
-useradd -m -G wheel $USER
-echo "$USER:123" | chpasswd
-
-# add user root privileges
-# NOTE: NOPASSWD is temporary. Will remove after post-install setup
-echo "%wheel ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-
-# start services
-systemctl enable lightdm NetworkManager
 EOF
 
 echo "Unmounting filesystems..."

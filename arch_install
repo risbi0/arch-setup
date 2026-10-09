@@ -25,7 +25,7 @@ echo "Installing the base system..."
 sed -i "/^#ParallelDownloads = /c\ParallelDownloads = 10" /etc/pacman.conf
 pacman-key --init
 pacman-key --populate
-pacstrap /mnt linux linux-firmware base base-devel sudo kitty
+pacstrap /mnt linux linux-firmware base base-devel sudo git rustup kitty
 
 echo "Generating fstab..."
 genfstab -U /mnt >> /mnt/etc/fstab
